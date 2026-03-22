@@ -310,8 +310,8 @@ body {
 ========================= */
 #undo-btn {
   position: absolute;
-  left: calc(60px + 31 * 55px + 10px);
-  top: 375px;
+  left: calc(60px + 31 * 55px + 20px);
+  top: 395px;
   background: #8e44ad;
   color: white;
   border: none;
@@ -335,8 +335,8 @@ body {
 ========================= */
 #ai-assistant-btn {
   position: absolute;
-  left: calc(60px + 31 * 55px + 10px);
-  top: 445px;
+  left: calc(60px + 31 * 55px + 20px);
+  top: 475px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
