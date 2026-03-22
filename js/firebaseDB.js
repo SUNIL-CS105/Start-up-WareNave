@@ -38,8 +38,7 @@ window.saveWarehouseData = function () {
 
 // ── Live-listener: load pallets from Firebase ─────────────────
 window.loadWarehouseData = function () {
-  const loading = document.getElementById('loading-indicator');
-  if (loading) loading.style.display = 'flex';
+
 
   // Detach any existing listener
   if (window.warehouseRef) {
