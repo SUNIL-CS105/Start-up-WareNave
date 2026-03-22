@@ -39,12 +39,6 @@ window.GRID_ROWS = ['A','B','C','D','E','F','G','H','I','J','K','L','M',
                     'N','O','P','Q','R','S','T','U','V','W','X'];
 window.GRID_COLS = 30;
 
-// Special zones (non-grid)
-window.STAGING_ZONE = { name: 'New_#',  left: 1710, top: 110, width: 110, height: 60, color: '#ffffff', border: '2px dashed #aaa' };
-window.DROP_ZONES   = [
-  { id: 'SHIPPED', name: 'SHIPPED', left: 1710, top: 200, width: 110, height: 60, color: '#e74c3c' }
-];
-
 // ── Build the grid ────────────────────────────────────────────
 window.createGridLabels = function () {
   const container = document.querySelector('.grid-stack');
@@ -54,49 +48,43 @@ window.createGridLabels = function () {
   window.GRID_ROWS.forEach((row, r) => {
     for (let c = 1; c <= window.GRID_COLS; c++) {
       const div = document.createElement('div');
-      div.className       = 'label-cell';
-      div.style.left      = `${c * window.CELL_WIDTH}px`;
-      div.style.top       = `${r * window.CELL_HEIGHT}px`;
-      div.style.width     = `${window.CELL_WIDTH}px`;
-      div.style.height    = `${window.CELL_HEIGHT}px`;
-      div.innerText       = `${row}${c}`;
+      div.className        = 'label-cell';
+      div.style.left       = `${c * window.CELL_WIDTH}px`;
+      div.style.top        = `${r * window.CELL_HEIGHT}px`;
+      div.style.width      = `${window.CELL_WIDTH}px`;
+      div.style.height     = `${window.CELL_HEIGHT}px`;
+      div.innerText        = `${row}${c}`;
       div.dataset.location = `${row}${c}`;
       container.appendChild(div);
     }
   });
 
-  // Staging / New_# zone
-  const sz = window.STAGING_ZONE;
+  // New_# staging zone — position set by positionSidePanels()
   const stagingDiv = document.createElement('div');
-  stagingDiv.className       = 'label-cell';
-  stagingDiv.style.left      = `${sz.left}px`;
-  stagingDiv.style.top       = `${sz.top}px`;
-  stagingDiv.style.width     = `${sz.width}px`;
-  stagingDiv.style.height    = `${sz.height}px`;
-  stagingDiv.style.background = sz.color;
-  if (sz.border) stagingDiv.style.border = sz.border;
-  stagingDiv.style.fontSize  = '11px';
-  stagingDiv.style.display   = 'flex';
-  stagingDiv.style.alignItems = 'center';
+  stagingDiv.className            = 'label-cell';
+  stagingDiv.style.background     = '#ffffff';
+  stagingDiv.style.border         = '2px dashed #aaa';
+  stagingDiv.style.fontSize       = '11px';
+  stagingDiv.style.display        = 'flex';
+  stagingDiv.style.alignItems     = 'center';
   stagingDiv.style.justifyContent = 'center';
-  stagingDiv.innerText        = sz.name;
-  stagingDiv.dataset.location = sz.name;
+  stagingDiv.style.fontWeight     = 'bold';
+  stagingDiv.style.color          = '#555';
+  stagingDiv.innerText            = 'New_#';
+  stagingDiv.dataset.location     = 'New_#';
   container.appendChild(stagingDiv);
+  window._stagingDivEl = stagingDiv;
 
-  // Drop zones
-  window.DROP_ZONES.forEach(zone => {
-    const div = document.createElement('div');
-    div.className           = 'label-cell drop-zone';
-    div.id                  = zone.id;
-    div.style.left          = `${zone.left}px`;
-    div.style.top           = `${zone.top}px`;
-    div.style.width         = `${zone.width}px`;
-    div.style.height        = `${zone.height}px`;
-    div.style.backgroundColor = zone.color;
-    div.innerText           = zone.name;
-    div.dataset.location    = zone.name;
-    container.appendChild(div);
-  });
+  // SHIPPED drop zone — position set by positionSidePanels()
+  const shippedDiv = document.createElement('div');
+  shippedDiv.className            = 'label-cell drop-zone';
+  shippedDiv.id                   = 'SHIPPED';
+  shippedDiv.style.backgroundColor = '#e74c3c';
+  shippedDiv.style.fontWeight     = 'bold';
+  shippedDiv.innerText            = 'SHIPPED';
+  shippedDiv.dataset.location     = 'SHIPPED';
+  container.appendChild(shippedDiv);
+  window._shippedDivEl = shippedDiv;
 
   window.createAxisLabels();
   window.positionSidePanels();
@@ -104,41 +92,112 @@ window.createGridLabels = function () {
 
 // ── Axis labels ───────────────────────────────────────────────
 window.createAxisLabels = function () {
-  const wrapper  = document.getElementById('warehouse-container');
+  const wrapper = document.getElementById('warehouse-container');
   wrapper.querySelectorAll('.axis-label').forEach(el => el.remove());
 
   const gridLeft = window.GRID_LEFT;
   const gridTop  = window.GRID_TOP;
 
-  // Column numbers top & bottom
   for (let c = 1; c <= window.GRID_COLS; c++) {
     const topLabel = document.createElement('div');
-    topLabel.className  = 'axis-label axis-col-top';
-    topLabel.style.left = `${gridLeft + c * window.CELL_WIDTH}px`;
-    topLabel.style.top  = `${gridTop - 30}px`;
+    topLabel.className   = 'axis-label axis-col-top';
+    topLabel.style.left  = `${gridLeft + c * window.CELL_WIDTH}px`;
+    topLabel.style.top   = `${gridTop - 30}px`;
     topLabel.style.width = `${window.CELL_WIDTH}px`;
     topLabel.textContent = c;
     wrapper.appendChild(topLabel);
 
     const botLabel = document.createElement('div');
-    botLabel.className  = 'axis-label axis-col-bottom';
-    botLabel.style.left = `${gridLeft + c * window.CELL_WIDTH}px`;
-    botLabel.style.top  = `${gridTop + window.GRID_ROWS.length * window.CELL_HEIGHT + 4}px`;
+    botLabel.className   = 'axis-label axis-col-bottom';
+    botLabel.style.left  = `${gridLeft + c * window.CELL_WIDTH}px`;
+    botLabel.style.top   = `${gridTop + window.GRID_ROWS.length * window.CELL_HEIGHT + 4}px`;
     botLabel.style.width = `${window.CELL_WIDTH}px`;
     botLabel.textContent = c;
     wrapper.appendChild(botLabel);
   }
 
-  // Row letters left
   window.GRID_ROWS.forEach((row, r) => {
     const rowLabel = document.createElement('div');
-    rowLabel.className  = 'axis-label axis-row-left';
-    rowLabel.style.left = `${gridLeft - 44}px`;
-    rowLabel.style.top  = `${gridTop + r * window.CELL_HEIGHT}px`;
+    rowLabel.className    = 'axis-label axis-row-left';
+    rowLabel.style.left   = `${gridLeft - 44}px`;
+    rowLabel.style.top    = `${gridTop + r * window.CELL_HEIGHT}px`;
     rowLabel.style.height = `${window.CELL_HEIGHT}px`;
-    rowLabel.textContent = row;
+    rowLabel.textContent  = row;
     wrapper.appendChild(rowLabel);
   });
+};
+
+// ── Position all right-side panels cleanly ────────────────────
+window.positionSidePanels = function () {
+  const gridRight = window.GRID_LEFT + (window.GRID_COLS + 1) * window.CELL_WIDTH + 20;
+  const panelTop  = window.GRID_TOP;
+  const panelW    = 150;
+
+  // 1. Add Product panel — top
+  const addPanel = document.getElementById('add-product-panel');
+  if (addPanel) {
+    addPanel.style.left  = `${gridRight}px`;
+    addPanel.style.top   = `${panelTop}px`;
+    addPanel.style.width = `${panelW}px`;
+  }
+
+  // 2. New_# staging zone — below Add Product (add panel is ~170px tall)
+  if (window._stagingDivEl) {
+    window._stagingDivEl.style.left   = `${gridRight}px`;
+    window._stagingDivEl.style.top    = `${panelTop + 185}px`;
+    window._stagingDivEl.style.width  = `${panelW}px`;
+    window._stagingDivEl.style.height = '50px';
+  }
+
+  // 3. SHIPPED drop zone — below New_#
+  if (window._shippedDivEl) {
+    window._shippedDivEl.style.left   = `${gridRight}px`;
+    window._shippedDivEl.style.top    = `${panelTop + 250}px`;
+    window._shippedDivEl.style.width  = `${panelW}px`;
+    window._shippedDivEl.style.height = '50px';
+  }
+
+  // 4. Shipped info text panel — below SHIPPED
+  const shippedInfo = document.getElementById('shipped-info-panel');
+  if (shippedInfo) {
+    shippedInfo.style.left  = `${gridRight}px`;
+    shippedInfo.style.top   = `${panelTop + 315}px`;
+    shippedInfo.style.width = `${panelW}px`;
+  }
+
+  // 5. Undo button — below info panel (info panel is ~50px tall)
+  const undoBtn = document.getElementById('undo-btn');
+  if (undoBtn) {
+    undoBtn.style.left   = `${gridRight}px`;
+    undoBtn.style.top    = `${panelTop + 380}px`;
+    undoBtn.style.width  = `${panelW}px`;
+    undoBtn.style.height = '54px';
+  }
+
+  // 6. AI Assistant button — below Undo
+  const aiBtn = document.getElementById('ai-assistant-btn');
+  if (aiBtn) {
+    aiBtn.style.left   = `${gridRight}px`;
+    aiBtn.style.top    = `${panelTop + 450}px`;
+    aiBtn.style.width  = `${panelW}px`;
+    aiBtn.style.height = '54px';
+  }
+
+  // Size the warehouse container to fit everything
+  const naturalW = gridRight + panelW + 20;
+  const naturalH = window.GRID_TOP + window.GRID_ROWS.length * window.CELL_HEIGHT + 80;
+  const container = document.getElementById('warehouse-container');
+  if (container) {
+    container.style.width  = `${naturalW}px`;
+    container.style.height = `${naturalH}px`;
+  }
+
+  // Size the grid-stack
+  const gridStack = document.querySelector('.grid-stack');
+  if (gridStack) {
+    gridStack.style.width  = `${window.GRID_COLS * window.CELL_WIDTH + window.CELL_WIDTH}px`;
+    gridStack.style.height = `${window.GRID_ROWS.length * window.CELL_HEIGHT}px`;
+  }
 };
 
 // ── Hit-test: which cell is at this client point? ─────────────
@@ -228,10 +287,10 @@ window.positionPalletInLocation = function (pallet) {
     .find(el => el.dataset.location === location);
   if (!locEl) return;
 
-  const left   = parseInt(locEl.style.left,  10);
-  const top    = parseInt(locEl.style.top,   10);
-  const width  = parseInt(locEl.style.width, 10);
-  const height = parseInt(locEl.style.height,10);
+  const left   = parseInt(locEl.style.left,   10);
+  const top    = parseInt(locEl.style.top,    10);
+  const width  = parseInt(locEl.style.width,  10);
+  const height = parseInt(locEl.style.height, 10);
 
   const stack  = window.palletsByLocation[location] || [];
   const idx    = stack.indexOf(pallet);
@@ -267,8 +326,14 @@ window.getInventorySummaryData = function () {
 window.getInventoryExportData = function () {
   return window.pallets
     .filter(p => p.location !== 'SHIPPED')
-    .map(p => ({ itemId: p.itemId, location: p.location, quantity: window.formatQuantity(p.quantity) }))
-    .sort((a, b) => a.itemId !== b.itemId ? a.itemId.localeCompare(b.itemId) : a.location.localeCompare(b.location));
+    .map(p => ({
+      itemId:   p.itemId,
+      location: p.location,
+      quantity: window.formatQuantity(p.quantity)
+    }))
+    .sort((a, b) => a.itemId !== b.itemId
+      ? a.itemId.localeCompare(b.itemId)
+      : a.location.localeCompare(b.location));
 };
 
 window.updateInventorySummary = function () {
@@ -290,13 +355,13 @@ window.showInventorySummaryModal = function () {
   document.getElementById('inventory-summary-modal').style.display = 'block';
 };
 
-// ── Excel export — uses dynamic company name ──────────────────
+// ── Excel export ──────────────────────────────────────────────
 window.downloadInventoryExcel = function () {
   const rows = window.getInventoryExportData();
   if (!rows.length) { alert('No inventory data to export.'); return; }
 
-  const left  = rows.filter((_, i) => i % 2 === 0);
-  const right = rows.filter((_, i) => i % 2 !== 0);
+  const left   = rows.filter((_, i) => i % 2 === 0);
+  const right  = rows.filter((_, i) => i % 2 !== 0);
   const maxLen = Math.max(left.length, right.length);
 
   const csvRows = [['Product ID','Location','Quantity','|','Product ID','Location','Quantity']];
@@ -314,8 +379,6 @@ window.downloadInventoryExcel = function () {
   const url  = URL.createObjectURL(blob);
   const link = document.createElement('a');
   const today = new Date().toISOString().slice(0, 10);
-
-  // Use company name dynamically in filename
   const companyName = (document.querySelector('.app-title')?.textContent || 'WareNave')
     .replace(/[^a-z0-9]/gi, '_');
 
@@ -355,8 +418,10 @@ window.scaleGrid = function () {
   const availW = stage.clientWidth  - 12;
   const availH = stage.clientHeight - 12;
 
-  const naturalW = parseFloat(container.style.width)  || (window.GRID_LEFT + (window.GRID_COLS + 1) * window.CELL_WIDTH + 165);
-  const naturalH = parseFloat(container.style.height) || (window.GRID_TOP  + window.GRID_ROWS.length * window.CELL_HEIGHT + 80);
+  const naturalW = parseFloat(container.style.width)
+    || (window.GRID_LEFT + (window.GRID_COLS + 1) * window.CELL_WIDTH + 190);
+  const naturalH = parseFloat(container.style.height)
+    || (window.GRID_TOP + window.GRID_ROWS.length * window.CELL_HEIGHT + 80);
 
   window.scale = Math.min(availW / naturalW, availH / naturalH, 1);
 
@@ -364,44 +429,6 @@ window.scaleGrid = function () {
   container.style.position  = 'absolute';
   container.style.left = `${Math.max((availW - naturalW * window.scale) / 2, 4)}px`;
   container.style.top  = `${Math.max((availH - naturalH * window.scale) / 2, 4)}px`;
-};
-
-// ── Position right-side panels relative to grid edge ─────────
-window.positionSidePanels = function () {
-  // Grid ends at: GRID_LEFT + (GRID_COLS + 1) * CELL_WIDTH
-  const gridRight = window.GRID_LEFT + (window.GRID_COLS + 1) * window.CELL_WIDTH + 10;
-  const panelTop  = window.GRID_TOP;
-
-  const panels = [
-    { id: 'add-product-panel',  top: panelTop },
-    { id: 'shipped-info-panel', top: panelTop + 185 },
-    { id: 'undo-btn',           top: panelTop + 275 },
-    { id: 'ai-assistant-btn',   top: panelTop + 345 }
-  ];
-
-  panels.forEach(({ id, top }) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.left = `${gridRight}px`;
-      el.style.top  = `${top}px`;
-    }
-  });
-
-  // Also size the container
-  const naturalW = gridRight + 155;
-  const naturalH = window.GRID_TOP + window.GRID_ROWS.length * window.CELL_HEIGHT + 80;
-  const container = document.getElementById('warehouse-container');
-  if (container) {
-    container.style.width  = `${naturalW}px`;
-    container.style.height = `${naturalH}px`;
-  }
-
-  // Size the grid-stack
-  const gridStack = document.querySelector('.grid-stack');
-  if (gridStack) {
-    gridStack.style.width  = `${window.GRID_COLS * window.CELL_WIDTH + window.CELL_WIDTH}px`;
-    gridStack.style.height = `${window.GRID_ROWS.length * window.CELL_HEIGHT}px`;
-  }
 };
 
 // ── Initialize ────────────────────────────────────────────────
@@ -418,7 +445,7 @@ window.initWarehouseApp = function () {
   window.scaleGrid();
   window.applyEditModeUI();
 
-  // Auto-save every 30s for resilience
+  // Auto-save every 30s
   setInterval(() => {
     if (firebase.auth().currentUser && window.companyId) {
       window.saveWarehouseData();
