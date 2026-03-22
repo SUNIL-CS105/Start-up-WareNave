@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WareNave — Warehouse Management</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!--
+    ╔══════════════════════════════════════════════════════════╗
+    ║  AI ASSISTANT CONFIGURATION                              ║
+    ║  When you have your Anthropic API key, paste it below.  ║
+    ║  Leave the empty string until then — everything else    ║
+    ║  in the app will work fine without it.                  ║
+    ╚══════════════════════════════════════════════════════════╝
+  -->
+  <script>
+    window.ANTHROPIC_API_KEY = ''; // ← paste your key here when ready: "sk-ant-..."
+  </script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  LOGIN                                                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="login-container">
+    <div class="login-box">
+      <div class="login-logo">⬡ WareNave</div>
+      <h2>Sign In</h2>
+      <input type="email"    id="login-email"    placeholder="Email address" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button type="button"  id="login-btn">Login</button>
+      <a id="show-signup">New to WareNave? Create account →</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  SIGN UP — Owner or Employee                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="signup-container" style="display:none;">
+    <div class="login-box">
+      <div class="login-logo">⬡ WareNave</div>
+      <h2>Create Account</h2>
+
+      <!-- Role selector -->
+      <div class="role-selector">
+        <label class="role-option">
+          <input type="radio" name="signup-role" id="role-owner" value="owner" checked />
+          <span>🏢 Register my company</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="signup-role" id="role-employee" value="employee" />
+          <span>👤 Join existing company</span>
+        </label>
+      </div>
+
+      <!-- Owner fields -->
+      <div id="owner-fields">
+        <input type="text" id="signup-company-name" placeholder="Company Name (e.g. Acme Logistics)" />
+      </div>
+
+      <!-- Employee fields -->
+      <div id="employee-fields" style="display:none;">
+        <input type="text" id="signup-join-company" placeholder="Exact Company Name to join" />
+      </div>
+
+      <input type="email"    id="signup-email"    placeholder="Email address" />
+      <input type="password" id="signup-password" placeholder="Password (min 6 chars)" />
+      <button type="button"  id="signup-btn">Create Account</button>
+      <a id="show-login">Already have an account? Sign in →</a>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading-indicator">Loading warehouse data…</div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  MAIN WAREHOUSE APP                                     -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div id="warehouse-app" style="display:none;">
+    <div id="app-stage">
+      <div id="warehouse-container">
+
+        <!-- Header bar (attached to map) -->
+        <div id="app-header" class="map-header">
+          <div class="app-header-left">
+            <!-- Company name injected dynamically by auth.js -->
+            <div class="app-title">WareNave</div>
+          </div>
+
+          <div class="app-header-right">
+            <button type="button" id="training-btn"          class="header-btn">Training</button>
+            <button type="button" id="edit-mode-btn"         class="header-btn">Edit: ON</button>
+            <button type="button" id="excel-export-btn"      class="header-btn">Download Excel</button>
+            <button type="button" id="inventory-summary-btn" class="header-btn">Inventory Summary</button>
+            <button type="button" id="history-btn"           class="header-btn">History</button>
+            <button type="button" id="logout-btn"            class="header-btn">Logout</button>
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid-stack"></div>
+
+        <!-- Add Product panel -->
+        <div id="add-product-panel" class="control-panel">
+          <div style="margin-bottom:8px;font-size:13px;">Add Product</div>
+          <input type="text"   id="new-item" placeholder="Item #" />
+          <input type="number" id="new-q"    placeholder="Quantity" min="0.01" step="any" />
+          <button type="button" id="add-product-btn">➕ Add New Product</button>
+        </div>
+
+        <!-- Shipped info panel -->
+        <div id="shipped-info-panel">
+          <div class="side-label">Drop pallets on <span style="color:#e74c3c;font-weight:bold;">SHIPPED</span> to remove</div>
+        </div>
+
+        <!-- Undo -->
+        <button type="button" id="undo-btn" title="Undo last move">↩ UNDO</button>
+
+        <!-- AI Assistant -->
+        <button type="button" id="ai-assistant-btn" title="Ask AI about your warehouse">
+          ✦ AI Assistant
+        </button>
+
+      </div><!-- /warehouse-container -->
+    </div><!-- /app-stage -->
+
+    <!-- ── Movement History Modal ───────────────────────── -->
+    <div id="history-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3 id="history-modal-title">Warehouse Movement History</h3>
+        <div id="history-output"></div>
+      </div>
+    </div>
+
+    <!-- ── Inventory Summary Modal ──────────────────────── -->
+    <div id="inventory-summary-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3>Inventory Summary</h3>
+        <div id="inventory-summary-modal-output"></div>
+      </div>
+    </div>
+
+    <!-- ── Training Modal ───────────────────────────────── -->
+    <div id="training-modal" class="modal">
+      <div class="modal-content training-modal-content">
+        <span class="close-btn" id="training-close-btn">&times;</span>
+        <h3 id="training-title">WareNave Training</h3>
+        <div id="training-body"></div>
+        <div class="training-controls">
+          <button type="button" id="training-prev-btn" class="training-nav-btn">⬅ Previous</button>
+          <span id="training-progress">1 / 1</span>
+          <button type="button" id="training-next-btn" class="training-nav-btn">Next ➡</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI Assistant Modal ───────────────────────────── -->
+    <div id="ai-modal" class="modal">
+      <div class="modal-content ai-modal-content">
+        <span class="close-btn">&times;</span>
+        <h3>✦ WareNave AI Assistant</h3>
+        <p style="color:#666;font-size:13px;margin-top:0;">
+          Ask natural language questions about your warehouse.
+        </p>
+
+        <!-- Suggested questions -->
+        <div class="ai-suggestions">
+          <button class="ai-suggestion">Where is item 123?</button>
+          <button class="ai-suggestion">What items moved the most?</button>
+          <button class="ai-suggestion">Which items are low in stock?</button>
+          <button class="ai-suggestion">Show recent movements</button>
+        </div>
+
+        <div class="ai-input-row">
+          <input type="text" id="ai-input" placeholder="Ask anything about your warehouse…" />
+          <button type="button" id="ai-send-btn">Ask</button>
+        </div>
+
+        <div id="ai-output" class="ai-output-box">
+          <!-- AI answer appears here -->
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /warehouse-app -->
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!--  SCRIPTS (load order matters)                          -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <script src="js/config/firebase.js"></script>
+  <script src="js/firebaseDB.js"></script>
+  <script src="js/pallet.js"></script>
+  <script src="js/warehouse.js"></script>
+  <script src="js/events.js"></script>
+  <script src="js/training.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
