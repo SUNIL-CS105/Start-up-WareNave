@@ -23,7 +23,6 @@ window.saveWarehouseData = function () {
 
   const data = {};
   window.pallets.forEach(p => {
-    // SHIPPED is a terminal action — exclude from stored pallets
     if (p.location !== 'SHIPPED') {
       data[p.id] = {
         itemId:   p.itemId,
@@ -39,7 +38,6 @@ window.saveWarehouseData = function () {
 // ── Live-listener: load pallets from Firebase ─────────────────
 window.loadWarehouseData = function () {
 
-
   // Detach any existing listener
   if (window.warehouseRef) {
     window.warehouseRef.off();
@@ -47,10 +45,7 @@ window.loadWarehouseData = function () {
   }
 
   const ref = window.companyRef('pallets');
-  if (!ref) {
-    if (loading) loading.style.display = 'none';
-    return;
-  }
+  if (!ref) return;
 
   window.warehouseRef = ref;
 
@@ -68,15 +63,14 @@ window.loadWarehouseData = function () {
           palletData.itemId,
           Number(palletData.quantity),
           palletData.location,
-          false,   // don't record history on load
-          palletId // preserve original pallet id
+          false,
+          palletId
         );
       });
     }
 
     window.updateInventorySummary();
     window.applyEditModeUI();
-    if (loading) loading.style.display = 'none';
   });
 };
 
@@ -95,11 +89,11 @@ window.recordHistory = function ({ action, itemId, quantity, fromLocation, toLoc
     uid:          user.uid,
     email,
     accountName,
-    action:       action        || 'move',
-    itemId:       itemId        || '',
+    action:       action       || 'move',
+    itemId:       itemId       || '',
     quantity:     Number(quantity) || 0,
-    fromLocation: fromLocation  || '',
-    toLocation:   toLocation    || '',
+    fromLocation: fromLocation || '',
+    toLocation:   toLocation   || '',
     timestamp:    Date.now()
   });
 };
@@ -124,13 +118,13 @@ window.purgeOldHistory = function () {
 
 // ── Render movement history modal ─────────────────────────────
 window.showHistory = function () {
-  const modalTitle   = document.getElementById('history-modal-title');
+  const modalTitle    = document.getElementById('history-modal-title');
   const historyOutput = document.getElementById('history-output');
-  const modal        = document.getElementById('history-modal');
+  const modal         = document.getElementById('history-modal');
 
-  modalTitle.innerText      = 'Warehouse Movement History';
-  historyOutput.innerHTML   = 'Loading…';
-  modal.style.display       = 'block';
+  modalTitle.innerText    = 'Warehouse Movement History';
+  historyOutput.innerHTML = 'Loading…';
+  modal.style.display     = 'block';
 
   const ref = window.companyRef('history');
   if (!ref) {
@@ -167,9 +161,9 @@ window.showHistory = function () {
       entries.forEach(entry => {
         html += `
           <tr>
-            <td>${entry.accountName || '-'}</td>
-            <td>${entry.action      || '-'}</td>
-            <td>${entry.itemId      || '-'}</td>
+            <td>${entry.accountName  || '-'}</td>
+            <td>${entry.action       || '-'}</td>
+            <td>${entry.itemId       || '-'}</td>
             <td>${entry.fromLocation || '-'}</td>
             <td>${entry.toLocation   || '-'}</td>
             <td>${window.formatQuantity(entry.quantity || 0)}</td>
