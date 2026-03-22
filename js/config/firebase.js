@@ -1,16 +1,16 @@
 // ============================================================
 // WareNave — firebase.js
-// Initializes Firebase. Credentials remain the same.
+// New Firebase project: version-2-warenave
 // ============================================================
 
 window.firebaseConfig = {
-  apiKey: "AIzaSyDgTBFlnjtcbdvuf2l7YUnoHXK9-L4I5MI",
-  authDomain: "warehouse-maxsa.firebaseapp.com",
-  databaseURL: "https://warehouse-maxsa-default-rtdb.firebaseio.com",
-  projectId: "warehouse-maxsa",
-  storageBucket: "warehouse-maxsa.firebasestorage.app",
-  messagingSenderId: "978214247804",
-  appId: "1:978214247804:web:aa785914ee177d74ba98f9"
+  apiKey: "AIzaSyCJSRwEyvRk1tL4ML9BhueY1oqwTOlDSzs",
+  authDomain: "version-2-warenave.firebaseapp.com",
+  databaseURL: "https://version-2-warenave-default-rtdb.firebaseio.com",
+  projectId: "version-2-warenave",
+  storageBucket: "version-2-warenave.firebasestorage.app",
+  messagingSenderId: "314682735918",
+  appId: "1:314682735918:web:8c530cb069f0ba43408ebf"
 };
 
 if (!firebase.apps.length) {
