@@ -47,18 +47,22 @@ window.initAuth = function () {
     const headerBar        = document.getElementById('app-header');
     const loading          = document.getElementById('loading-indicator');
 
+    // ── ALWAYS hide loading first ──────────────────────────
+    if (loading) loading.style.display = 'none';
+
     if (user) {
+      // Show loading only while we resolve the company
       if (loading) loading.style.display = 'flex';
 
       const companyId = await window.resolveUserCompany(user.uid);
 
       if (!companyId) {
+        if (loading) loading.style.display = 'none';
         alert('Your account is not linked to any company. Please contact your administrator.');
         firebase.auth().signOut();
         return;
       }
 
-      // Update header with company name
       const compSnap = await window.database.ref(`companies/${companyId}/name`).once('value');
       const companyName = compSnap.val() || 'WareNave';
       const titleEl = document.querySelector('.app-title');
@@ -74,6 +78,7 @@ window.initAuth = function () {
       if (typeof window.applyEditModeUI   === 'function') window.applyEditModeUI();
 
       if (loading) loading.style.display = 'none';
+
     } else {
       window.companyId = null;
       localStorage.removeItem('wn_companyId');
